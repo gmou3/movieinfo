@@ -5,7 +5,7 @@ read -p "Search: " movie
 movie=$(echo $movie | sed -r 's/ /%20/g')
 content=$(wget https://www.rottentomatoes.com/search?search=$movie -qO -)
 readarray movies -t <<< $(echo $content | grep -oP '(?<=<search-page-media-row).*?(?=</search-page-media-row>)')
-readarray titleList -t <<< $(echo ${movies[@]} | grep -oP '(?<=slot="title">).*?(?= </a>)' | sed "s/&#39;/'/g" | sed 's/&amp;/\&/g')
+readarray titleList -t <<< $(echo ${movies[@]} | grep -oP '(?<=slot="title"> ).*?(?= </a>)' | sed "s/&#39;/'/g" | sed 's/&amp;/\&/g')
 readarray yearList -t <<< $(echo ${movies[@]} | grep -oP '(?<=releaseyear=").*?(?=")')
 readarray linkList -t <<< $(echo ${movies[@]} | grep -oP '(?<= </a> <a href=").*?(?=" class="unset" data-qa="info-name" slot="title">)')
 
@@ -16,7 +16,7 @@ else
     echo 'No results'
     exit
 fi
-for i in $(seq 0 5);
+for i in $(seq 0 7);
 do
     if [ ${#titleList[$i]} != 0 ]; then
         echo '  '$i. ${titleList[$i]} \(${yearList[$i]:=-}\) | sed 's/ )/)/'
@@ -40,27 +40,33 @@ audiencescore=$(echo $tmp | grep -oP '(?<=audiencescore=").*?(?=")')
 # Text Formatting
 BOLD='\e[1m'
 RED='\e[1;31m'
-NORM='\e[0m' # Normal
+NRM='\e[0m' # Normal
 
 # Print Chosen Movie Info
 script -q -c 'asciiart -c -w 25 /tmp/thumbnail.jpg' -O /dev/null >> /tmp/thumbnail.txt
-echo -e $thumb
-echo -e ${BOLD}${titleList[$choice]} \(${yearList[$choice]:=-}\)${NORM} | sed 's/ )/)/' >> /tmp/movieinfo.txt
+echo -e ${BOLD}${titleList[$choice]} \(${yearList[$choice]:=-}\)${NRM} | sed 's/ )/)/' >> /tmp/movieinfo.txt
 if [ "$description" = "Rotten Tomatoes every day." ]; then
     echo '-' >> /tmp/movieinfo.txt
 else
     echo ${description:=No description available} >> /tmp/movieinfo.txt
 fi
+echo ''
+echo -e ${BOLD}Visit${NRM}: ${linkList[choice]}
+echo ''
 echo '' >> /tmp/movieinfo.txt
-echo -e ${BOLD}Language${NORM}: ${language:=-} >> /tmp/movieinfo.txt
-echo -e ${BOLD}Director${NORM}: ${director:=-} >> /tmp/movieinfo.txt
-echo -e ${BOLD}Runtime${NORM}: ${runtime:=-} >> /tmp/movieinfo.txt
-echo -e ${BOLD}Genre${NORM}: ${genre:=-} >> /tmp/movieinfo.txt
+echo -e ${BOLD}Language${NRM}: ${language:=-} >> /tmp/movieinfo.txt
+echo -e ${BOLD}Director${NRM}: ${director:=-} >> /tmp/movieinfo.txt
+echo -e ${BOLD}Runtime${NRM}: ${runtime:=-} >> /tmp/movieinfo.txt
+echo -e ${BOLD}Genre${NRM}: ${genre:=-} >> /tmp/movieinfo.txt
 echo '' >> /tmp/movieinfo.txt
-echo -e ${RED}tomatoscore${NORM}: ${tomatoscore:=-} >> /tmp/movieinfo.txt
-echo -e ${BOLD}audiencescore${NORM}: ${audiencescore:=-} >> /tmp/movieinfo.txt
+echo -e ${RED}Tomatometer${NRM}: ${tomatoscore:=-} >> /tmp/movieinfo.txt
+echo -e ${BOLD}Audience Score${NRM}: ${audiencescore:=-} >> /tmp/movieinfo.txt
 fold -s -w55 /tmp/movieinfo.txt > /tmp/movieinfostd.txt
-paste /tmp/thumbnail.txt /tmp/movieinfostd.txt | sed 's/\t/\t\t\t\t/' >> /tmp/output.txt
+if [ "$(cat /tmp/thumbnail.txt | grep asciiart)" ]; then # In case of asciiart error no image
+    cp /tmp/movieinfostd.txt /tmp/output.txt
+else
+    paste /tmp/thumbnail.txt /tmp/movieinfostd.txt | sed 's/\t/\t\t\t\t/' >> /tmp/output.txt
+fi
 cat /tmp/output.txt
 
 # Clear Cache
