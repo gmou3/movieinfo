@@ -1,7 +1,14 @@
 #!/bin/bash
 
+# Text Formatting
+BOLD='\e[1m'
+RED='\e[1;31m'
+BLUE='\e[1;34m'
+NRM='\e[0m' # Normal
+
 # Read Movie and Search
-read -p "Search: " movie
+echo -en ${BOLD}Search${NRM}:' '
+read movie
 movie=$(echo $movie | sed -r 's/ /%20/g')
 content=$(wget https://www.rottentomatoes.com/search?search=$movie -qO -)
 readarray movies -t <<< $(echo $content | grep -oP '(?<=<search-page-media-row).*?(?=</search-page-media-row>)')
@@ -11,18 +18,19 @@ readarray linkList -t <<< $(echo ${movies[@]} | grep -oP '(?<= </a> <a href=").*
 
 # Movie Choice Dialog
 if [ ${#titleList[$i]} != 1 ]; then
-    echo 'Choose movie:'
+    echo -e ${BOLD}Choose movie${NRM}:
 else
-    echo 'No results'
+    echo -e ${BOLD}No results${NRM}
     exit
 fi
 for i in $(seq 0 7);
 do
     if [ ${#titleList[$i]} != 0 ]; then
-        echo '  '$i. ${titleList[$i]} \(${yearList[$i]:=-}\) | sed 's/ )/)/'
+        echo -e '  '${BLUE}$i${NRM}. ${titleList[$i]} \(${yearList[$i]:=-}\) | sed 's/ )/)/'
     fi
 done
-read -p "Choice: " choice
+echo -en ${BOLD}Choice \(${BLUE}0${NRM}${BOLD}\)${NRM}:' '
+read choice
 
 # Retrieve Chosen Movie Info
 content=$(wget ${linkList[choice]} -qO -)
@@ -36,11 +44,6 @@ genre=$(echo $content | grep -oP '(?<="titleGenre":").*?(?=")' | head -1)
 tmp=$(echo $content | grep -oP '(?<=<score-board-deprecated).*?(?=</score-board-deprecated>)')
 tomatoscore=$(echo $tmp | grep -oP '(?<=tomatometerscore=").*?(?=")')
 audiencescore=$(echo $tmp | grep -oP '(?<=audiencescore=").*?(?=")')
-
-# Text Formatting
-BOLD='\e[1m'
-RED='\e[1;31m'
-NRM='\e[0m' # Normal
 
 # Print Chosen Movie Info
 script -q -c 'asciiart -c -w 25 /tmp/thumbnail.jpg' -O /dev/null >> /tmp/thumbnail.txt
