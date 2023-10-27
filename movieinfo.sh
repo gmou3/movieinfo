@@ -52,23 +52,34 @@ audiencescore=$(echo $tmp | grep -oP '(?<=audiencescore=").*?(?=")')
 termwidth=$(tput cols) # terminal width
 asciiwidth=$((27*$termwidth/100))
 txtwidth=$((6*$termwidth/10))
-script -q -c "asciiart -c -w $asciiwidth /tmp/img.jpg" -O /dev/null >> /tmp/imgdos
+script -q -c "asciiart -c -i -w $asciiwidth /tmp/img.jpg" -O /dev/null >> /tmp/imgdos
 tr -d '\r' < /tmp/imgdos > /tmp/img # dos to unix
 
 printf "${BOLD}${titleList[$choice]} (${yearList[$choice]:=-})${NRM}" | tr -d '\n' >> /tmp/mvinfo
 if [ "$description" = "Rotten Tomatoes every day." ]; then
-    printf "\n-" >> /tmp/mvinfo
+    printf "\n-\n" >> /tmp/mvinfo
 else
-    printf "\n${description:=No description available}\n" >> /tmp/mvinfo
+    printf "\n${description:=-}\n" >> /tmp/mvinfo
 fi
-printf "\n${BOLD}Visit${NRM}: ${linkList[choice]}\n"
+
 printf "\n${BOLD}Language${NRM}: ${language:=-}\n" >> /tmp/mvinfo
 printf "${BOLD}Director${NRM}: ${director:=-}\n" >> /tmp/mvinfo
 printf "${BOLD}Runtime${NRM}: ${runtime:=-}\n" >> /tmp/mvinfo
 printf "${BOLD}Genre${NRM}: ${genre:=-}\n\n" >> /tmp/mvinfo
-printf "${RED}Tomatometer${NRM}: ${tomatoscore:=-}\n" >> /tmp/mvinfo
-printf "${BOLD}Audience Score${NRM}: ${audiencescore:=-}\n" >> /tmp/mvinfo
+
+if [ -n "$tomatoscore" ]; then
+    printf "${RED}Tomatometer${NRM}: $tomatoscore%%\n" >> /tmp/mvinfo
+else
+    printf "${RED}Tomatometer${NRM}: -\n" >> /tmp/mvinfo
+fi
+if [ $audiencescore ]; then
+    printf "${BOLD}Audience Score${NRM}: $audiencescore%%\n" >> /tmp/mvinfo
+else
+    printf "${BOLD}Audience Score${NRM}: -\n" >> /tmp/mvinfo
+fi
+
 fold -s -w $txtwidth /tmp/mvinfo > /tmp/mvinfostd
+printf "\n${BOLD}Visit${NRM}: ${linkList[choice]}\n"
 if [ "$(cat /tmp/img | grep asciiart)" ]; then # In case of asciiart error no image
     cp /tmp/mvinfostd /tmp/output
 else
