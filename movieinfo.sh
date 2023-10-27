@@ -67,7 +67,7 @@ printf "${BOLD}Director${NRM}: ${director:=-}\n" >> /tmp/mvinfo
 printf "${BOLD}Runtime${NRM}: ${runtime:=-}\n" >> /tmp/mvinfo
 printf "${BOLD}Genre${NRM}: ${genre:=-}\n\n" >> /tmp/mvinfo
 printf "${RED}Tomatometer${NRM}: ${tomatoscore:=-}\n" >> /tmp/mvinfo
-printf "${BOLD}Audience Score${NRM}: ${audiencescore:=-}" >> /tmp/mvinfo
+printf "${BOLD}Audience Score${NRM}: ${audiencescore:=-}\n" >> /tmp/mvinfo
 fold -s -w $txtwidth /tmp/mvinfo > /tmp/mvinfostd
 if [ "$(cat /tmp/img | grep asciiart)" ]; then # In case of asciiart error no image
     cp /tmp/mvinfostd /tmp/output
