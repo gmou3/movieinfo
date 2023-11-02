@@ -52,14 +52,15 @@ audiencescore=$(echo $tmp | grep -oP '(?<=audiencescore=").*?(?=")')
 termwidth=$(tput cols) # terminal width
 asciiwidth=$((27*$termwidth/100))
 txtwidth=$((6*$termwidth/10))
-script -q -c "asciiart -c -i -w $asciiwidth /tmp/img.jpg" -O /dev/null >> /tmp/imgdos
-tr -d '\r' < /tmp/imgdos > /tmp/img # dos to unix
+script -q -c "asciiart -c -i -w $asciiwidth /tmp/img.jpg" -O /dev/null >> /tmp/img0
+sed -i 's/\r//g' /tmp/img0 # dos to unix
+paste -d '' /tmp/img0 <(printf "\n${BOLD}") > /tmp/img # in case title overflows to 2nd line
 
-printf "${BOLD}${titleList[$choice]} (${yearList[$choice]:=-})${NRM}" | tr -d '\n' >> /tmp/mvinfo
+printf "${BOLD}${titleList[$choice]} (${yearList[$choice]:=-})${NRM}" | tr -d '\n' > /tmp/mvinfo
 if [ "$description" = "Rotten Tomatoes every day." ]; then
-    printf "\n-\n" >> /tmp/mvinfo
+    printf "\n${NRM}-\n" >> /tmp/mvinfo
 else
-    printf "\n${description:=-}\n" >> /tmp/mvinfo
+    printf "\n${NRM}${description:=-}\n" >> /tmp/mvinfo
 fi
 
 printf "\n${BOLD}Language${NRM}: ${language:=-}\n" >> /tmp/mvinfo
@@ -83,9 +84,9 @@ printf "\n${BOLD}Visit${NRM}: ${linkList[choice]}\n"
 if [ "$(cat /tmp/img | grep asciiart)" ]; then # In case of asciiart error no image
     cp /tmp/mvinfostd /tmp/output
 else
-    paste /tmp/img /tmp/mvinfostd >> /tmp/output
+    paste /tmp/img /tmp/mvinfostd > /tmp/output
 fi
 cat /tmp/output
 
 # Clear temporary files
-rm /tmp/img.jpg /tmp/img /tmp/imgdos /tmp/mvinfo /tmp/mvinfostd /tmp/output
+rm /tmp/img.jpg /tmp/img /tmp/img0 /tmp/mvinfo /tmp/mvinfostd /tmp/output
