@@ -84,7 +84,16 @@ printf "\n${BOLD}Visit${NRM}: ${linkList[choice]}\n"
 if [ "$(cat /tmp/img | grep asciiart)" ]; then # In case of asciiart error no image
     cp /tmp/mvinfostd /tmp/output
 else
-    paste /tmp/img /tmp/mvinfostd > /tmp/output
+    sed -e 's/$/\t/' -i /tmp/img
+    linesart=$(cat /tmp/img | wc -l)
+    linestxt=$(cat /tmp/mvinfostd | wc -l)
+    i=$((linestxt-linesart))
+    while (( i > 0 ))
+    do
+        printf "%*s\t\n" $asciiwidth ' ' >> /tmp/img
+        ((i--))
+    done
+    paste -d '' /tmp/img /tmp/mvinfostd > /tmp/output
 fi
 cat /tmp/output
 
