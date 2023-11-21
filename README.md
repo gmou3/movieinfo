@@ -4,6 +4,11 @@ Get movie info in the terminal
 
 # Dependencies
 asciiart
+OR
+catimg
 
 # Run
-./movieinfo.sh
+./movieinfo.sh [-r]
+
+Flags:
+	-r: realistic image using catimg (instead of default asciiart)
