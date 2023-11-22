@@ -4,8 +4,10 @@
 BOLD='\e[1m'
 RED='\e[1;31m'
 BLUE='\e[1;34m'
+YLLW='\e[1;33m'
 NRM='\e[0m' # Normal
 
+# Check args
 r=false
 for arg in "$@"; do
     case $arg in
@@ -19,6 +21,16 @@ for arg in "$@"; do
         ;;
     esac
 done
+
+# Warn if asciiart or catimg is unavailable
+imgerror=false
+if [ "$r" = false ] && [ -z "$(which asciiart)" ]; then
+    printf "${YLLW}Warning${NRM}: asciiart is not installed.\n"
+    imgerror=true
+elif [ "$r" = true ] && [ -z "$(which catimg)" ]; then
+    printf "${YLLW}Warning${NRM}: catimg is not installed.\n"
+    imgerror=true
+fi
 
 # Read movie and search
 printf ${BOLD}Search${NRM}:' '
@@ -67,7 +79,6 @@ termwidth=$(tput cols) # terminal width
 asciiwidth=$((27*$termwidth/100))
 txtwidth=$((6*$termwidth/10))
 
-imgerror=false
 if [ "$r" = false ]; then # asciiart
     script -q -c "asciiart -c -i -w $asciiwidth /tmp/img.jpg" -O /dev/null >> /tmp/img0
     if [ "$(cat /tmp/img0 | grep asciiart)" ]; then # In case of asciiart error no image
