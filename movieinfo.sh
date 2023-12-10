@@ -25,10 +25,10 @@ done
 # Warn if asciiart or catimg is unavailable
 imgerror=false
 if [ "$r" = false ] && [ -z "$(which asciiart)" ]; then
-    printf "${YLLW}Warning${NRM}: asciiart is not installed.\n"
+    printf "${YLLW}WARNING${NRM}: asciiart is not installed.\n"
     imgerror=true
 elif [ "$r" = true ] && [ -z "$(which catimg)" ]; then
-    printf "${YLLW}Warning${NRM}: catimg is not installed.\n"
+    printf "${YLLW}WARNING${NRM}: catimg is not installed.\n"
     imgerror=true
 fi
 
@@ -49,15 +49,46 @@ else
     printf "${BOLD}No results${NRM}\n"
     exit
 fi
-for i in $(seq 0 7);
+moviesNum=${#titleList[@]}
+for i in $(seq 0 $((moviesNum < 7 ? moviesNum : 7)));
 do
     if [ ${#titleList[$i]} != 0 ]; then
         printf "\t${BLUE}$i${NRM}. ${titleList[$i]} (${yearList[$i]:=-})" | tr -d '\n'
         printf '\n'
     fi
 done
-printf "${BOLD}Choice (${BLUE}0${NRM}${BOLD})${NRM}: "
-read choice
+
+# Read and check choice
+chosen=false
+i=$((moviesNum < 7 ? moviesNum : 7))
+while [ "$chosen" = false ]
+do
+    printf "${BOLD}Choice (${BLUE}0${NRM}${BOLD})${NRM}: "
+    read choice
+    if [ -z $choice ]; then # default choice
+        choice='0'
+        chosen=true
+    elif [ "$choice" = 'e' ]; then
+        exit
+    elif [ "$choice" = 'm' ]; then # more movies
+        ((i++))
+        if [ ${#titleList[$i]} != 0 ]; then
+            printf "${BOLD}Printing more...${NRM}\n"
+            while [ ${#titleList[$i]} != 0 ]
+            do
+                printf "\t${BLUE}$i${NRM}. ${titleList[$i]} (${yearList[$i]:=-})" | tr -d '\n'
+                printf '\n'
+                ((i++))
+            done
+        else
+            printf "No more results.\n"
+        fi
+    elif [[ $choice =~ ^[0-9]+$ ]] && [ $choice -lt $moviesNum ]; then
+        chosen=true
+    else
+        printf "${RED}ERROR${NRM}: Invalid choice. (Type '${BOLD}m${NRM}' for more results or '${BOLD}e${NRM}' to exit.)\n"
+    fi
+done
 
 # Retrieve chosen movie info
 content=$(wget ${linkList[$choice]} -qO -)
