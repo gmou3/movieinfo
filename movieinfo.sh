@@ -46,21 +46,19 @@ readarray linkList -t <<< $(echo ${movies[@]} | grep -oP '(?<= </a> <a href=").*
 if [ ${#titleList[$i]} != 1 ]; then
     printf "${BOLD}Choose movie${NRM}:\n"
 else
-    printf "${BOLD}No results${NRM}\n"
+    printf "${BOLD}No results.${NRM}\n"
     exit
 fi
 moviesNum=${#titleList[@]}
-for i in $(seq 0 $((moviesNum < 7 ? moviesNum : 7)));
+for i in $(seq 0 $((moviesNum < 8 ? moviesNum-1 : 7)));
 do
-    if [ ${#titleList[$i]} != 0 ]; then
-        printf "\t${BLUE}$i${NRM}. ${titleList[$i]} (${yearList[$i]:=-})" | tr -d '\n'
-        printf '\n'
-    fi
+    printf "\t${BLUE}$i${NRM}. ${titleList[$i]} (${yearList[$i]:=-})" | tr -d '\n'
+    printf '\n'
 done
 
 # Read and check choice
 chosen=false
-i=$((moviesNum < 7 ? moviesNum : 7))
+i=$((moviesNum < 8 ? moviesNum-1 : 7))
 while [ "$chosen" = false ]
 do
     printf "${BOLD}Choice (${BLUE}0${NRM}${BOLD})${NRM}: "
@@ -83,7 +81,8 @@ do
         else
             printf "No more results.\n"
         fi
-    elif [[ $choice =~ ^[0-9]+$ ]] && [ $choice -lt $moviesNum ]; then
+        ((i--))
+    elif [[ $choice =~ ^[0-9]+$ ]] && [ $choice -le $i ]; then
         chosen=true
     else
         printf "${RED}ERROR${NRM}: Invalid choice. (Type '${BOLD}m${NRM}' for more results or '${BOLD}e${NRM}' to exit.)\n"
@@ -97,11 +96,11 @@ img=$(echo $content | grep -oP '(?<=<meta property="og:image" content=").*?(?=">
 wget -q $img -O /tmp/img.jpg
 
 description=$(echo $content | grep -oP '(?<=description":").*?(?=",")' | head -1)
-language=$(echo $content | grep -oP '(?<=Original Language:</b> <span data-qa="movie-info-item-value">).*?(?=</span>)')
-director=$(echo $content | grep -oP '(?<="movie-info-director">).*?(?=</a>)')
-runtime=$(echo $content | grep -oP '(?<=mM"> ).*?(?= </time>)')
+language=$(echo $content | grep -oP '(?<=Original Language:</b> <span data-qa="movie-info-item-value">).*?(?=</)')
+director=$(echo $content | grep -oP '(?<="movie-info-director">).*?(?=</)')
+runtime=$(echo $content | grep -oP '(?<=mM"> ).*?(?= </)')
 genre=$(echo $content | grep -oP '(?<="titleGenre":").*?(?=")' | head -1)
-tmp=$(echo $content | grep -oP '(?<=<score-board-deprecated).*?(?=</score-board-deprecated>)')
+tmp=$(echo $content | grep -oP '(?<=<score-board-deprecated).*?(?=</)')
 tomatoscore=$(echo $tmp | grep -oP '(?<=tomatometerscore=").*?(?=")')
 audiencescore=$(echo $tmp | grep -oP '(?<=audiencescore=").*?(?=")')
 
