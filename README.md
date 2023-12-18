@@ -3,12 +3,13 @@ Get movie info in the terminal
 ![Screenshot](screenshot.png)
 
 # Dependencies
-asciiart <br />
-OR <br />
-catimg
+asciiart  (for default mode) <br />
+catimg  (for realistic [-r] mode) <br />
+ —  (for no image [-n] mode)
 
-# Run
-./movieinfo.sh [-r]
+# Usage
+./movieinfo.sh [flags]
 
-Flags: <br />
-   -r: realistic image using catimg (instead of default asciiart)
+flags: <br />
+   -r: realistic image using catimg (instead of default asciiart) <br />
+   -n: no image
