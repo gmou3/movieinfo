@@ -5,7 +5,7 @@ BOLD='\e[1m'
 RED='\e[1;31m'
 BLUE='\e[1;34m'
 YLLW='\e[1;33m'
-NRM='\e[0m' # Normal
+NRM='\e[0m'  # normal
 
 # Check args
 n=false
@@ -73,18 +73,18 @@ i=$((moviesNum < 8 ? moviesNum - 1 : 7))
 while [ "$chosen" = false ]; do
     printf "${BOLD}Choice (${BLUE}0${NRM}${BOLD})${NRM}: "
     read choice
-    if [ -z $choice ]; then # default choice
+    if [ -z $choice ]; then  # default choice
         choice='0'
         chosen=true
     elif [ "$choice" = 'e' ]; then
         exit
-    elif [ "$choice" = 'm' ]; then # more movies
+    elif [ "$choice" = 'm' ]; then  # more movies
         ((i++))
         if [ ${#titleList[$i]} != 0 ]; then
             printf "${BOLD}Printing more...${NRM}\n"
             while [ ${#titleList[$i]} != 0 ]; do
-                printf "    ${BLUE}$i${NRM}. ${titleList[$i]} \
-                (${yearList[$i]:=-})" | tr -d '\n'
+                printf "    ${BLUE}$i${NRM}. ${titleList[$i]} " | tr -d '\n'
+                printf "(${yearList[$i]:=-})" | tr -d '\n'
                 printf '\n'
                 ((i++))
             done
@@ -95,17 +95,25 @@ while [ "$chosen" = false ]; do
     elif [[ $choice =~ ^[0-9]+$ ]] && [ $choice -le $i ]; then
         chosen=true
     else
-        printf "${RED}ERROR${NRM}: Invalid choice. (Type '${BOLD}m${NRM}' for \
-        more results or '${BOLD}e${NRM}' to exit.)\n"
+        printf "${RED}ERROR${NRM}: Invalid choice. (Type '${BOLD}m${NRM}' "
+        printf "for more results or '${BOLD}e${NRM}' to exit.)\n"
     fi
 done
 
 # Retrieve chosen movie info
 content=$(wget ${linkList[$choice]} -qO -)
 
-img=$(echo $content | grep -oP \
-'(?<=<meta property="og:image" content=").*?(?=">)')
-wget -q $img -O /tmp/img.jpg
+if [ "$noimg" = false ]; then
+    img=$(echo $content | grep -oP \
+    '(?<=<meta property="og:image" content=").*?(?=">)')
+    if [ -z $(echo $img | grep -oP 'RT_TwitterCard') ]; then
+        wget -q $img -O /tmp/img.jpg
+    else
+        noimg=true
+        printf "\n${YLLW}NOTICE${NRM}: there is no image available for the "
+        printf "selected movie."
+    fi
+fi
 
 description=$(echo $content | grep -oP \
 '(?<=description":").*?(?=",")' | head -1)
@@ -123,24 +131,29 @@ termwidth=$(tput cols) # terminal width
 asciiwidth=$((27 * $termwidth / 100))
 txtwidth=$((6 * $termwidth / 10))
 
-if [ "$r" = false ]; then # asciiart
-    script -q -c "asciiart -c -i -w $asciiwidth /tmp/img.jpg" -O /dev/null \
-    >>/tmp/img0
-    if [ "$(cat /tmp/img0 | grep asciiart)" ]; then
-        # In case of asciiart error no image
-        noimg=true
+if [ "$noimg" = false ]; then
+    if [ "$r" = false ]; then  # asciiart
+        script -q -c "asciiart -c -i -w $asciiwidth /tmp/img.jpg" -O /dev/null\
+        >>/tmp/img0
+        if [ "$(cat /tmp/img0 | grep asciiart)" ]; then
+            # In case of asciiart error no image
+            noimg=true
+        fi
+        sed -i 's/\r//g' /tmp/img0  # dos to unix
+    else  # catimg
+        catimg -r 2 -w $((2 * $asciiwidth)) /tmp/img.jpg &>>/tmp/img0
+        if [ "$(cat /tmp/img0 | grep error)" ]; then
+            # In case of catimg error no image
+            noimg=true
+        fi
+        sed -i '$d' /tmp/img0  # remove last line
     fi
-    sed -i 's/\r//g' /tmp/img0 # dos to unix
-else                           # catimg
-    catimg -r 2 -w $((2 * $asciiwidth)) /tmp/img.jpg &>>/tmp/img0
-    if [ "$(cat /tmp/img0 | grep error)" ]; then
-        # In case of catimg error no image
-        noimg=true
+    if [ "$noimg" = true ]; then
+        printf "\n${RED}ERROR${NRM}: could not process movie image."
     fi
-    sed -i '$d' /tmp/img0 # remove last line
+    # In case title overflows to 2nd line
+    paste -d '' /tmp/img0 <(printf "\n${BOLD}") >/tmp/img
 fi
-paste -d '' /tmp/img0 <(printf "\n${BOLD}") >/tmp/img # in case title overflows
-                                                      # to 2nd line
 
 printf "${BOLD}${titleList[$choice]} (${yearList[$choice]:=-})${NRM}" \
         | tr -d '\n' >/tmp/mvinfo
@@ -173,7 +186,7 @@ fi
 
 fold -s -w $txtwidth /tmp/mvinfo >/tmp/mvinfostd
 printf "\n${BOLD}Visit${NRM}: ${linkList[choice]}\n"
-if [ "$noimg" = true ]; then # no image
+if [ "$noimg" = true ]; then
     cp /tmp/mvinfostd /tmp/output
 else
     sed -e 's/$/    /' -i /tmp/img
@@ -189,4 +202,5 @@ fi
 cat /tmp/output
 
 # Clear temporary files
-rm /tmp/img.jpg /tmp/img /tmp/img0 /tmp/mvinfo /tmp/mvinfostd /tmp/output
+rm -f /tmp/img.jpg /tmp/img /tmp/img0
+rm /tmp/mvinfo /tmp/mvinfostd /tmp/output
