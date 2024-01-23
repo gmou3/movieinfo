@@ -105,7 +105,7 @@ content=$(wget ${linkList[$choice]} -qO -)
 
 if [ "$noimg" = false ]; then
     img=$(echo $content | grep -oP \
-    '(?<=<meta property="og:image" content=").*?(?=">)')
+    '(?<=<meta property="og:image" content=").*?(?=">)' | head -1)
     if [ -z $(echo $img | grep -oP 'RT_TwitterCard') ]; then
         wget -q $img -O /tmp/img.jpg
     else
