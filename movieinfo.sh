@@ -19,9 +19,9 @@ for arg in "$@"; do
         r=true
         ;;
     *)
-        printf "${BOLD}Usage${NRM}: movieinfo [flags]\n\n${BOLD}Flags${NRM}:\n\
-    -n: no image\n\
-    -r: realistic image using catimg (instead of default asciiart)\n"
+        printf "${BOLD}Usage${NRM}: movieinfo [flags]\n\n${BOLD}flags${NRM}:\n\
+    -r: realistic image using catimg (instead of default asciiart)\n\
+    -n: no image\n"
         exit
         ;;
     esac
