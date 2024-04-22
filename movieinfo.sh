@@ -105,7 +105,7 @@ content=$(wget ${linkList[$choice]} -qO -)
 
 if [ "$noimg" = false ]; then
     img=$(echo $content | grep -oP \
-    '(?<=<meta property="og:image" content=").*?(?=">)' | head -1)
+    '(?<=<meta property="og:image" content=").*?(?=")' | head -1)
     if [ -z $(echo $img | grep -oP 'RT_TwitterCard') ]; then
         wget -q $img -O /tmp/img.jpg
     else
@@ -116,15 +116,17 @@ if [ "$noimg" = false ]; then
 fi
 
 description=$(echo $content | grep -oP \
-'(?<=description":").*?(?=",")' | head -1)
+'(?<=<meta name="description" content=").*?(?=")' | head -1)
 language=$(echo $content | grep -oP \
-'(?<=Original Language:</b> <span data-qa="movie-info-item-value">).*?(?=</)')
-director=$(echo $content | grep -oP '(?<="movie-info-director">).*?(?=</)')
-runtime=$(echo $content | grep -oP '(?<=mM"> ).*?(?= </)')
+'(?<=Original Language</rt-text> </dt> <dd> <rt-text>).*?(?=</rt-text>)')
+director=$(echo $content | grep -oP \
+'(?<="director":\[{"@type":"Person","name":").*?(?=")')
+runtime=$(echo $content | grep -oP '(?<="duration":").*?(?=")' | head -1)
 genre=$(echo $content | grep -oP '(?<="titleGenre":").*?(?=")' | head -1)
-tmp=$(echo $content | grep -oP '(?<=<score-board-deprecated).*?(?=</)')
-tomatoscore=$(echo $tmp | grep -oP '(?<=tomatometerscore=").*?(?=")')
-audiencescore=$(echo $tmp | grep -oP '(?<=audiencescore=").*?(?=")')
+tomatoscore=$(echo $content | grep -oP \
+'(?<=s","scorePercent":").*?(?=%","title":"Tomatometer")' | head -1)
+audiencescore=$(echo $content | grep -oP \
+'(?<="scorePercent":").*?(?=%","title":"Audience Score")' | head -1)
 
 # Print chosen movie info
 termwidth=$(tput cols) # terminal width
