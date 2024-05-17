@@ -9,38 +9,38 @@ NRM='\e[0m'  # normal
 
 # Check args
 n=false
-r=false
+a=false
 for arg in "$@"; do
     case $arg in
     -n)
         n=true
         ;;
-    -r)
-        r=true
+    -a)
+        a=true
         ;;
     *)
         printf "${BOLD}Usage${NRM}: movieinfo [flags]\n\n${BOLD}flags${NRM}:\n\
-    -r: realistic image using catimg (instead of default asciiart)\n\
+    -a: ASCII art image using asciiart (instead of default catimg)\n\
     -n: no image\n"
         exit
         ;;
     esac
 done
 
-# Warn if asciiart or catimg is unavailable
+# Warn if catimg or asciiart is unavailable
 noimg=false
 if [ "$n" = true ]; then
     noimg=true
-elif [ "$r" = false ] && [ -z "$(which asciiart)" ]; then
-    printf "${YLLW}WARNING${NRM}: asciiart is not installed.\n"
-    noimg=true
-elif [ "$r" = true ] && [ -z "$(which catimg)" ]; then
+elif [ "$a" = false ] && [ -z "$(which catimg)" ]; then
     printf "${YLLW}WARNING${NRM}: catimg is not installed.\n"
+    noimg=true
+elif [ "$a" = true ] && [ -z "$(which asciiart)" ]; then
+    printf "${YLLW}WARNING${NRM}: asciiart is not installed.\n"
     noimg=true
 fi
 
 # Read movie and search
-printf ${BOLD}Search${NRM}:' '
+printf "${BOLD}Search${NRM}: "
 read movie
 movie=$(echo $movie | sed -r 's/ /%20/g')
 content=$(wget https://www.rottentomatoes.com/search?search=$movie -qO -)
@@ -116,7 +116,8 @@ if [ "$noimg" = false ]; then
 fi
 
 description=$(echo $content | grep -oP \
-'(?<=<meta name="description" content=").*?(?=")' | head -1)
+'(?<=<meta name="description" content=").*?(?=")' | sed "s/&#39;/'/g" | \
+sed 's/&amp;/\&/g' | head -1)
 language=$(echo $content | grep -oP \
 '(?<=Original Language</rt-text> </dt> <dd> <rt-text>).*?(?=</rt-text>)')
 director=$(echo $content | grep -oP \
@@ -134,7 +135,14 @@ asciiwidth=$((27 * $termwidth / 100))
 txtwidth=$((6 * $termwidth / 10))
 
 if [ "$noimg" = false ]; then
-    if [ "$r" = false ]; then  # asciiart
+    if [ "$a" = false ]; then  # catimg
+        catimg -r 2 -w $((2 * $asciiwidth)) /tmp/img.jpg &>>/tmp/img0
+        if [ "$(cat /tmp/img0 | grep error)" ]; then
+            # In case of catimg error no image
+            noimg=true
+        fi
+        sed -i '$d' /tmp/img0  # remove last line
+    else  # asciiart
         script -q -c "asciiart -c -i -w $asciiwidth /tmp/img.jpg" -O /dev/null\
         >>/tmp/img0
         if [ "$(cat /tmp/img0 | grep asciiart)" ]; then
@@ -142,13 +150,6 @@ if [ "$noimg" = false ]; then
             noimg=true
         fi
         sed -i 's/\r//g' /tmp/img0  # dos to unix
-    else  # catimg
-        catimg -r 2 -w $((2 * $asciiwidth)) /tmp/img.jpg &>>/tmp/img0
-        if [ "$(cat /tmp/img0 | grep error)" ]; then
-            # In case of catimg error no image
-            noimg=true
-        fi
-        sed -i '$d' /tmp/img0  # remove last line
     fi
     if [ "$noimg" = true ]; then
         printf "\n${RED}ERROR${NRM}: could not process movie image."
@@ -185,6 +186,7 @@ if [ $audiencescore ]; then
 else
     printf "${BOLD}Audience Score${NRM}: -\n" >>/tmp/mvinfo
 fi
+
 
 fold -s -w $txtwidth /tmp/mvinfo >/tmp/mvinfostd
 printf "\n${BOLD}Visit${NRM}: ${linkList[choice]}\n"

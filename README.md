@@ -1,11 +1,11 @@
 # movieinfo
-Get movie info in the terminal
-![Screenshot](screenshot.png)
+**Get movie info in the terminal**
+![Screenshot](screenshots/screenshot_catimg.png)
 
 # Dependencies
-asciiart  (for default mode) <br />
-catimg  (for realistic [-r] mode) <br />
- —  (for no image [-n] mode)
+`catimg`: for default mode <br />
+`asciiart`: for ASCII art [-a] mode <br />
+**None**: for no image [-n] mode
 
 # Installation
 To install systemwide, run:
@@ -18,5 +18,5 @@ To install systemwide, run:
 movieinfo [flags]
 
 flags: <br />
-   -r: realistic image using catimg (instead of default asciiart) <br />
+   -a: ASCII art image using `asciiart` (instead of default `catimg`) <br />
    -n: no image
