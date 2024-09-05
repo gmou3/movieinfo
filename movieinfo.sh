@@ -62,7 +62,7 @@ else
 fi
 moviesNum=${#titleList[@]}
 for i in $(seq 0 $((moviesNum < 8 ? moviesNum - 1 : 7))); do
-    printf "    ${BLUE}$i${NRM}. ${titleList[$i]} (${yearList[$i]:=-})" \
+    printf "  ${BLUE}$i${NRM}. ${titleList[$i]} (${yearList[$i]:=-})" \
     | tr -d '\n'
     printf '\n'
 done
@@ -83,7 +83,7 @@ while [ "$chosen" = false ]; do
         if [ ${#titleList[$i]} != 0 ]; then
             printf "${BOLD}Printing more...${NRM}\n"
             while [ ${#titleList[$i]} != 0 ]; do
-                printf "    ${BLUE}$i${NRM}. ${titleList[$i]} " | tr -d '\n'
+                printf "  ${BLUE}$i${NRM}. ${titleList[$i]} " | tr -d '\n'
                 printf "(${yearList[$i]:=-})" | tr -d '\n'
                 printf '\n'
                 ((i++))
@@ -126,8 +126,8 @@ runtime=$(echo $content | grep -oP '(?<="duration":").*?(?=")' | head -1)
 genre=$(echo $content | grep -oP '(?<="titleGenre":").*?(?=")' | head -1)
 tomatoscore=$(echo $content | grep -oP \
 '(?<=s","scorePercent":").*?(?=%","title":"Tomatometer")' | head -1)
-audiencescore=$(echo $content | grep -oP \
-'(?<="scorePercent":").*?(?=%","title":"Audience Score")' | head -1)
+popcornmeter=$(echo $content | grep -oP \
+'(?<="scorePercent":").*?(?=%","title":"Popcornmeter")' | head -1)
 
 # Print chosen movie info
 termwidth=$(tput cols) # terminal width
@@ -160,16 +160,7 @@ fi
 
 printf "${BOLD}${titleList[$choice]} (${yearList[$choice]:=-})${NRM}" \
         | tr -d '\n' >/tmp/mvinfo
-excluded=(
-    "Rotten Tomatoes every day."
-    "You're almost there! Just confirm how you got your ticket."
-)
-inarray=$(echo ${excluded[@]} | grep -oP "$description")
-if [ -n "$inarray" ]; then
-    printf "\n${NRM}-\n" >>/tmp/mvinfo
-else
-    printf "\n${NRM}${description:=-}\n" >>/tmp/mvinfo
-fi
+printf "\n${NRM}${description:=-}\n" >>/tmp/mvinfo
 
 printf "\n${BOLD}Language${NRM}: ${language:=-}\n" >>/tmp/mvinfo
 printf "${BOLD}Director${NRM}: ${director:=-}\n" >>/tmp/mvinfo
@@ -181,12 +172,11 @@ if [ -n "$tomatoscore" ]; then
 else
     printf "${RED}Tomatometer${NRM}: -\n" >>/tmp/mvinfo
 fi
-if [ $audiencescore ]; then
-    printf "${BOLD}Audience Score${NRM}: $audiencescore%%\n" >>/tmp/mvinfo
+if [ -n "$popcornmeter" ]; then
+    printf "${BOLD}Popcornmeter${NRM}: $popcornmeter%%\n" >>/tmp/mvinfo
 else
-    printf "${BOLD}Audience Score${NRM}: -\n" >>/tmp/mvinfo
+    printf "${BOLD}Popcornmeter${NRM}: -\n" >>/tmp/mvinfo
 fi
-
 
 fold -s -w $txtwidth /tmp/mvinfo >/tmp/mvinfostd
 printf "\n${BOLD}Visit${NRM}: ${linkList[choice]}\n"
