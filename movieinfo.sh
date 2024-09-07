@@ -124,7 +124,7 @@ director=$(echo $content | grep -oP \
 '(?<="director":\[{"@type":"Person","name":").*?(?=")')
 runtime=$(echo $content | grep -oP '(?<="duration":").*?(?=")' | head -1)
 genre=$(echo $content | grep -oP '(?<="titleGenre":").*?(?=")' | head -1)
-tomatoscore=$(echo $content | grep -oP \
+tomatometer=$(echo $content | grep -oP \
 '(?<=s","scorePercent":").*?(?=%","title":"Tomatometer")' | head -1)
 popcornmeter=$(echo $content | grep -oP \
 '(?<="scorePercent":").*?(?=%","title":"Popcornmeter")' | head -1)
@@ -167,16 +167,10 @@ printf "${BOLD}Director${NRM}: ${director:=-}\n" >>/tmp/mvinfo
 printf "${BOLD}Runtime${NRM}: ${runtime:=-}\n" >>/tmp/mvinfo
 printf "${BOLD}Genre${NRM}: ${genre:=-}\n\n" >>/tmp/mvinfo
 
-if [ -n "$tomatoscore" ]; then
-    printf "${RED}Tomatometer${NRM}: $tomatoscore%%\n" >>/tmp/mvinfo
-else
-    printf "${RED}Tomatometer${NRM}: -\n" >>/tmp/mvinfo
-fi
-if [ -n "$popcornmeter" ]; then
-    printf "${BOLD}Popcornmeter${NRM}: $popcornmeter%%\n" >>/tmp/mvinfo
-else
-    printf "${BOLD}Popcornmeter${NRM}: -\n" >>/tmp/mvinfo
-fi
+meter=$([ -n "$tomatometer" ] && echo "$tomatometer%%" || echo "-")
+printf "${RED}Tomatometer${NRM}: ${meter}\n" >>/tmp/mvinfo
+meter=$([ -n "$popcornmeter" ] && echo "$popcornmeter%%" || echo "-")
+printf "${BOLD}Popcornmeter${NRM}: ${meter}\n" >>/tmp/mvinfo
 
 fold -s -w $txtwidth /tmp/mvinfo >/tmp/mvinfostd
 printf "\n${BOLD}Visit${NRM}: ${linkList[choice]}\n"
