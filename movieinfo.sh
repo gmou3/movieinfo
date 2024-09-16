@@ -1,5 +1,7 @@
 #!/bin/bash
 
+img_viewer=chafa  # default
+
 # Text formatting
 BOLD='\e[1m'
 RED='\e[1;31m'
@@ -8,35 +10,44 @@ YLLW='\e[1;33m'
 NRM='\e[0m'  # normal
 
 # Check args
-n=false
-a=false
+no_img=false
 for arg in "$@"; do
     case $arg in
-    -n)
-        n=true
+    --catimg)
+        img_viewer=catimg
         ;;
-    -a)
-        a=true
+    --asciiart)
+        img_viewer=asciiart
+        ;;
+    --no-image)
+        img_viewer=""
+        no_img=true
         ;;
     *)
         printf "${BOLD}Usage${NRM}: movieinfo [flags]\n\n${BOLD}flags${NRM}:\n\
-    -a: ASCII art image using asciiart (instead of default catimg)\n\
-    -n: no image\n"
+    --catimg: image using catimg\n\
+    --asciiart: ASCII art image using asciiart\n\
+    --no-image: no image\n"
         exit
         ;;
     esac
 done
 
-# Warn if catimg or asciiart is unavailable
-noimg=false
-if [ "$n" = true ]; then
-    noimg=true
-elif [ "$a" = false ] && [ -z "$(which catimg)" ]; then
-    printf "${YLLW}WARNING${NRM}: catimg is not installed.\n"
-    noimg=true
-elif [ "$a" = true ] && [ -z "$(which asciiart)" ]; then
-    printf "${YLLW}WARNING${NRM}: asciiart is not installed.\n"
-    noimg=true
+# Warn if image viewer is unavailable
+if [ "$no_img" = false ]; then
+    if [ "$img_viewer" = "chafa" ] && [ -z "$(which chafa)" ]; then
+        printf "${YLLW}WARNING${NRM}: chafa is not installed.\n"
+        img_viewer=""
+        no_img=true
+    elif [ "$img_viewer" = "catimg" ] && [ -z "$(which catimg)" ]; then
+        printf "${YLLW}WARNING${NRM}: catimg is not installed.\n"
+        img_viewer=""
+        no_img=true
+    elif [ "$img_viewer" = "asciiart" ] && [ -z "$(which asciiart 2>/dev/null)" ]; then
+        printf "${YLLW}WARNING${NRM}: asciiart is not installed.\n"
+        img_viewer=""
+        no_img=true
+    fi
 fi
 
 # Read movie and search
@@ -103,16 +114,10 @@ done
 # Retrieve chosen movie info
 content=$(wget ${linkList[$choice]} -qO -)
 
-if [ "$noimg" = false ]; then
+if [ "$no_img" = false ]; then
     img=$(echo $content | grep -oP \
     '(?<=<meta property="og:image" content=").*?(?=")' | head -1)
-    if [ -z $(echo $img | grep -oP 'RT_TwitterCard') ]; then
-        wget -q $img -O /tmp/img.jpg
-    else
-        noimg=true
-        printf "\n${YLLW}NOTICE${NRM}: there is no image available for the "
-        printf "selected movie."
-    fi
+    wget -q $img -O /tmp/img.jpg
 fi
 
 description=$(echo $content | grep -oP \
@@ -130,32 +135,39 @@ popcornmeter=$(echo $content | grep -oP \
 '(?<="scorePercent":").*?(?=%","title":"Popcornmeter")' | head -1)
 
 # Print chosen movie info
-termwidth=$(tput cols) # terminal width
-asciiwidth=$((27 * $termwidth / 100))
-txtwidth=$((6 * $termwidth / 10))
+printf "\n${BOLD}Visit${NRM}: ${linkList[choice]}\n"
 
-if [ "$noimg" = false ]; then
-    if [ "$a" = false ]; then  # catimg
-        catimg -r 2 -w $((2 * $asciiwidth)) /tmp/img.jpg &>>/tmp/img0
-        if [ "$(cat /tmp/img0 | grep error)" ]; then
-            # In case of catimg error no image
-            noimg=true
-        fi
-        sed -i '$d' /tmp/img0  # remove last line
-    else  # asciiart
-        script -q -c "asciiart -c -i -w $asciiwidth /tmp/img.jpg" -O /dev/null\
-        >>/tmp/img0
-        if [ "$(cat /tmp/img0 | grep asciiart)" ]; then
-            # In case of asciiart error no image
-            noimg=true
-        fi
-        sed -i 's/\r//g' /tmp/img0  # dos to unix
+termwidth=$(tput cols) # terminal width
+termheight=$(tput lines)  # terminal height
+asciiwidth=$((27 * termwidth / 100))
+txtwidth=$((6 * termwidth / 10))
+
+if [ "$img_viewer" = "chafa" ]; then
+    chafa -s "$((termwidth))x$((termheight / 3))" /tmp/img.jpg
+    printf "\n"
+elif [ "$img_viewer" = "catimg" ]; then
+    catimg -r 2 -w $((2 * $asciiwidth)) /tmp/img.jpg &>>/tmp/img0
+    if [ "$(cat /tmp/img0 | grep error)" ]; then
+        # In case of catimg error no image
+        no_img=true
     fi
-    if [ "$noimg" = true ]; then
-        printf "\n${RED}ERROR${NRM}: could not process movie image."
-    fi
+    sed -i '$d' /tmp/img0  # remove last line
     # In case title overflows to 2nd line
     paste -d '' /tmp/img0 <(printf "\n${BOLD}") >/tmp/img
+elif [ "$img_viewer" = "asciiart" ]; then
+    script -q -c "asciiart -c -i -w $asciiwidth /tmp/img.jpg" -O /dev/null\
+    >>/tmp/img0
+    if [ "$(cat /tmp/img0 | grep asciiart)" ]; then
+        # In case of asciiart error no image
+        no_img=true
+    fi
+    sed -i 's/\r//g' /tmp/img0  # dos to unix
+    # In case title overflows to 2nd line
+    paste -d '' /tmp/img0 <(printf "\n${BOLD}") >/tmp/img
+fi
+
+if [ "$no_img" = true ] && [ -n "$img_viewer" ]; then
+    printf "${RED}ERROR${NRM}: could not process movie image.\n"
 fi
 
 printf "${BOLD}${titleList[$choice]} (${yearList[$choice]:=-})${NRM}" \
@@ -173,8 +185,7 @@ meter=$([ -n "$popcornmeter" ] && echo "$popcornmeter%%" || echo "-")
 printf "${BOLD}Popcornmeter${NRM}: ${meter}\n" >>/tmp/mvinfo
 
 fold -s -w $txtwidth /tmp/mvinfo >/tmp/mvinfostd
-printf "\n${BOLD}Visit${NRM}: ${linkList[choice]}\n"
-if [ "$noimg" = true ]; then
+if [ "$img_viewer" = "chafa" ] || [ "$no_img" = true ]; then
     cp /tmp/mvinfostd /tmp/output
 else
     sed -e 's/$/    /' -i /tmp/img

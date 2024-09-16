@@ -1,9 +1,10 @@
 # movieinfo
 **Get movie info in the terminal**
-![Screenshot](screenshots/screenshot_catimg.png)
+![Screenshot](screenshots/screenshot_chafa.png)
 
 # Dependencies
-`catimg`: for default mode <br />
+`chafa`: for default mode <br />
+`catimg`: for catimg mode <br />
 `asciiart`: for ASCII art [-a] mode <br />
 **None**: for no image [-n] mode
 
@@ -18,5 +19,6 @@ To install systemwide, run:
 movieinfo [flags]
 
 flags: <br />
-   -a: ASCII art image using `asciiart` (instead of default `catimg`) <br />
-   -n: no image
+   --catimg: image using catimg <br />
+   --asciiart: ASCII art image using `asciiart` <br />
+   --no-image: no image
