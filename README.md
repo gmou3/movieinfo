@@ -1,5 +1,4 @@
-# movieinfo
-**Get movie info in the terminal**
+# movieinfo: ***Get movie info in the terminal***
 ![Screenshot](screenshots/screenshot_chafa.png)
 
 # Dependencies
@@ -19,6 +18,6 @@ To install systemwide, run:
 movieinfo [flags]
 
 flags: <br />
-   --catimg: image using catimg <br />
+   --catimg: image using `catimg` <br />
    --asciiart: ASCII art image using `asciiart` <br />
    --no-image: no image
