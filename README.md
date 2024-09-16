@@ -4,9 +4,9 @@
 
 # Dependencies
 `chafa`: for default mode <br />
-`catimg`: for catimg mode <br />
-`asciiart`: for ASCII art [-a] mode <br />
-**None**: for no image [-n] mode
+`catimg`: for catimg mode [--catimg] <br />
+`asciiart`: for ASCII art mode [--asciiart] <br />
+**None**: for no image mode [--no-image]
 
 # Installation
 To install systemwide, run:
