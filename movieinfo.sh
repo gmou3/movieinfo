@@ -121,8 +121,8 @@ if [ "$no_img" = false ]; then
 fi
 
 description=$(echo $content | grep -oP \
-'(?<=<meta name="description" content=").*?(?=")' | sed "s/&#39;/'/g" | \
-sed 's/&amp;/\&/g' | head -1)
+'(?<=<meta name="description" content=").*?(?=")' | sed 's/&quot;/"/g' | \
+sed "s/&#39;/'/g" | sed 's/&amp;/\&/g' | head -1)
 language=$(echo $content | grep -oP \
 '(?<=Original Language</rt-text> </dt> <dd> <rt-text>).*?(?=</rt-text>)')
 director=$(echo $content | grep -oP \
