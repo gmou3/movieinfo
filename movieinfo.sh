@@ -35,15 +35,15 @@ done
 
 # Warn if image viewer is unavailable
 if [ "$no_img" = false ]; then
-    if [ "$img_viewer" = "chafa" ] && [ -z "$(which chafa)" ]; then
+    if [ "$img_viewer" = "chafa" ] && [ -z "$(command -v chafa)" ]; then
         printf "${YLLW}WARNING${NRM}: chafa is not installed.\n"
         img_viewer=""
         no_img=true
-    elif [ "$img_viewer" = "catimg" ] && [ -z "$(which catimg)" ]; then
+    elif [ "$img_viewer" = "catimg" ] && [ -z "$(command -v catimg)" ]; then
         printf "${YLLW}WARNING${NRM}: catimg is not installed.\n"
         img_viewer=""
         no_img=true
-    elif [ "$img_viewer" = "asciiart" ] && [ -z "$(which asciiart 2>/dev/null)" ]; then
+    elif [ "$img_viewer" = "asciiart" ] && [ -z "$(command -v asciiart)" ]; then
         printf "${YLLW}WARNING${NRM}: asciiart is not installed.\n"
         img_viewer=""
         no_img=true
@@ -73,8 +73,7 @@ else
 fi
 moviesNum=${#titleList[@]}
 for i in $(seq 0 $((moviesNum < 8 ? moviesNum - 1 : 7))); do
-    printf "  ${BLUE}$i${NRM}. ${titleList[$i]} (${yearList[$i]:=-})" \
-    | tr -d '\n'
+    printf "  ${BLUE}$i${NRM}. ${titleList[$i]} (${yearList[$i]:=-})" | tr -d '\n'
     printf '\n'
 done
 
@@ -115,24 +114,20 @@ done
 content=$(wget ${linkList[$choice]} -qO -)
 
 if [ "$no_img" = false ]; then
-    img=$(echo $content | grep -oP \
-    '(?<=<meta property="og:image" content=").*?(?=")' | head -1)
+    img=$(echo $content | grep -oP '(?<=<meta property="og:image" content=").*?(?=")' | head -1)
     wget -q $img -O /tmp/img.jpg
 fi
 
-description=$(echo $content | grep -oP \
-'(?<=<meta name="description" content=").*?(?=")' | sed 's/&quot;/"/g' | \
-sed "s/&#39;/'/g" | sed 's/&amp;/\&/g' | head -1)
+description=$(echo $content | grep -oP '(?<=<meta name="description" content=").*?(?=")' | 
+sed 's/&quot;/"/g' | sed "s/&#39;/'/g" | sed 's/&amp;/\&/g' | head -1)
 language=$(echo $content | grep -oP \
-'(?<=Original Language</rt-text> </dt> <dd> <rt-text>).*?(?=</rt-text>)')
-director=$(echo $content | grep -oP \
-'(?<="director":\[{"@type":"Person","name":").*?(?=")')
-runtime=$(echo $content | grep -oP '(?<="duration":").*?(?=")' | head -1)
-genre=$(echo $content | grep -oP '(?<="titleGenre":").*?(?=")' | head -1)
-tomatometer=$(echo $content | grep -oP \
-'(?<=s","scorePercent":").*?(?=%","title":"Tomatometer")' | head -1)
-popcornmeter=$(echo $content | grep -oP \
-'(?<="scorePercent":").*?(?=%","title":"Popcornmeter")' | head -1)
+'(?<=Language</rt-text> </dt> <dd data-qa="item-value-group"> <rt-text data-qa="item-value">).*?(?=</rt-text>)')
+director=$(echo $content | grep -oP '(?<="director":\[{"@type":"Person","name":").*?(?=")')
+runtime=$(echo $content | grep -oP \
+'(?<=Runtime</rt-text> </dt> <dd data-qa="item-value-group"> <rt-text data-qa="item-value">).*?(?=</rt-text>)')
+genre=$(echo $content | grep -oP '(?<="metadataGenres":\[").*?(?=")' | head -1)
+tomatometer=$(echo $content | grep -oP '(?<=s","scorePercent":").*?(?=%","title":"Tomatometer")' | head -1)
+popcornmeter=$(echo $content | grep -oP '(?<="scorePercent":").*?(?=%","title":"Popcornmeter")' | head -1)
 
 # Print chosen movie info
 printf "\n${BOLD}Visit${NRM}: ${linkList[choice]}\n"
@@ -155,8 +150,7 @@ elif [ "$img_viewer" = "catimg" ]; then
     # In case title overflows to 2nd line
     paste -d '' /tmp/img0 <(printf "\n${BOLD}") >/tmp/img
 elif [ "$img_viewer" = "asciiart" ]; then
-    script -q -c "asciiart -c -i -w $asciiwidth /tmp/img.jpg" -O /dev/null\
-    >>/tmp/img0
+    script -q -c "asciiart -c -i -w $asciiwidth /tmp/img.jpg" -O /dev/null >>/tmp/img0
     if [ "$(cat /tmp/img0 | grep asciiart)" ]; then
         # In case of asciiart error no image
         no_img=true
@@ -170,8 +164,7 @@ if [ "$no_img" = true ] && [ -n "$img_viewer" ]; then
     printf "${RED}ERROR${NRM}: could not process movie image.\n"
 fi
 
-printf "${BOLD}${titleList[$choice]} (${yearList[$choice]:=-})${NRM}" \
-        | tr -d '\n' >/tmp/mvinfo
+printf "${BOLD}${titleList[$choice]} (${yearList[$choice]:=-})${NRM}" | tr -d '\n' >/tmp/mvinfo
 printf "\n${NRM}${description:=-}\n" >>/tmp/mvinfo
 
 printf "\n${BOLD}Language${NRM}: ${language:=-}\n" >>/tmp/mvinfo
