@@ -16,8 +16,12 @@ for arg in "$@"; do
     --catimg)
         img_viewer=catimg
         ;;
-    --asciiart)
-        img_viewer=asciiart
+    --ascii)
+        img_viewer=ascii-image-converter
+        ;;
+    --braille)
+        img_viewer=ascii-image-converter
+        flags=-b
         ;;
     --no-image)
         img_viewer=""
@@ -25,8 +29,9 @@ for arg in "$@"; do
         ;;
     *)
         printf "${BOLD}Usage${NRM}: movieinfo [flags]\n\n${BOLD}flags${NRM}:\n\
-    --catimg: image using catimg\n\
-    --asciiart: ASCII art image using asciiart\n\
+    --ascii: ASCII image using \`ascii-image-converter\`\n\
+    --braille: Braille image using \`ascii-image-converter -b\`\n\
+    --catimg: image using \`catimg\`\n\
     --no-image: no image\n"
         exit
         ;;
@@ -43,8 +48,8 @@ if [ "$no_img" = false ]; then
         printf "${YLLW}WARNING${NRM}: catimg is not installed.\n"
         img_viewer=""
         no_img=true
-    elif [ "$img_viewer" = "asciiart" ] && [ -z "$(command -v asciiart)" ]; then
-        printf "${YLLW}WARNING${NRM}: asciiart is not installed.\n"
+    elif [ "$img_viewer" = "ascii-image-converter" ] && [ -z "$(command -v ascii-image-converter)" ]; then
+        printf "${YLLW}WARNING${NRM}: ascii-image-converter is not installed.\n"
         img_viewer=""
         no_img=true
     fi
@@ -118,7 +123,7 @@ if [ "$no_img" = false ]; then
     wget -q $img -O /tmp/img.jpg
 fi
 
-description=$(echo $content | grep -oP '(?<=<meta name="description" content=").*?(?=")' | 
+description=$(echo $content | grep -oP '(?<=<meta name="description" content=").*?(?=")' |
 sed 's/&quot;/"/g' | sed "s/&#39;/'/g" | sed 's/&amp;/\&/g' | head -1)
 language=$(echo $content | grep -oP \
 '(?<=Language</rt-text> </dt> <dd data-qa="item-value-group"> <rt-text data-qa="item-value">).*?(?=</rt-text>)')
@@ -149,10 +154,10 @@ elif [ "$img_viewer" = "catimg" ]; then
     sed -i '$d' /tmp/img0  # remove last line
     # In case title overflows to 2nd line
     paste -d '' /tmp/img0 <(printf "\n${BOLD}") >/tmp/img
-elif [ "$img_viewer" = "asciiart" ]; then
-    script -q -c "asciiart -c -i -w $asciiwidth /tmp/img.jpg" -O /dev/null >>/tmp/img0
-    if [ "$(cat /tmp/img0 | grep asciiart)" ]; then
-        # In case of asciiart error no image
+elif [ "$img_viewer" = "ascii-image-converter" ]; then
+    script -q -c "ascii-image-converter $flags -C -W $asciiwidth /tmp/img.jpg" -O /dev/null >>/tmp/img0
+    if [ "$(cat /tmp/img0 | grep ascii-image-converter)" ]; then
+        # In case of ascii-image-converter error no image
         no_img=true
     fi
     sed -i 's/\r//g' /tmp/img0  # dos to unix
