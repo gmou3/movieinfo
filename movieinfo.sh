@@ -28,7 +28,9 @@ for arg in "$@"; do
         no_img=true
         ;;
     *)
-        printf "${BOLD}Usage${NRM}: movieinfo [flags]\n\n${BOLD}flags${NRM}:\n\
+        printf "${BOLD}Usage${NRM}: movieinfo [flags]\n\n\
+The default image previewer is \`chafa\`.\n\n\
+${BOLD}flags${NRM}:\n\
     --ascii: ASCII image using \`ascii-image-converter\`\n\
     --braille: Braille image using \`ascii-image-converter -b\`\n\
     --catimg: image using \`catimg\`\n\
@@ -59,7 +61,7 @@ fi
 printf "${BOLD}Search${NRM}: "
 read movie
 movie=$(echo $movie | sed -r 's/ /%20/g')
-content=$(wget https://www.rottentomatoes.com/search?search=$movie -qO -)
+content=$(curl -s https://www.rottentomatoes.com/search?search=$movie)
 readarray movies -t <<<$(echo $content | grep -oP \
 '(?<=<search-page-media-row).*?(?=</search-page-media-row>)')
 readarray titleList -t <<<$(echo ${movies[@]} | grep -oP \
@@ -116,11 +118,11 @@ while [ "$chosen" = false ]; do
 done
 
 # Retrieve chosen movie info
-content=$(wget ${linkList[$choice]} -qO -)
+content=$(curl -s ${linkList[$choice]})
 
 if [ "$no_img" = false ]; then
     img=$(echo $content | grep -oP '(?<=<meta property="og:image" content=").*?(?=")' | head -1)
-    wget -q $img -O /tmp/img.jpg
+    curl -s $img -o /tmp/img.jpg
 fi
 
 description=$(echo $content | grep -oP '(?<=<meta name="description" content=").*?(?=")' |

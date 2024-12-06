@@ -10,8 +10,8 @@
 # Installation
 To install systemwide, run:
 
-```shell
-sudo wget https://raw.githubusercontent.com/gmou3/movieinfo/main/movieinfo.sh -O /usr/bin/movieinfo
+```bash
+sudo curl https://raw.githubusercontent.com/gmou3/movieinfo/main/movieinfo.sh -o /usr/bin/movieinfo
 sudo chmod a+rx /usr/bin/movieinfo
 ```
 
@@ -19,6 +19,8 @@ sudo chmod a+rx /usr/bin/movieinfo
 
 # Usage
 movieinfo [flags]
+
+The default image previewer is `chafa`.
 
 flags: <br />
    --ascii: ASCII image using `ascii-image-converter` <br />
