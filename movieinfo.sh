@@ -41,20 +41,10 @@ ${BOLD}flags${NRM}:\n\
 done
 
 # Warn if image viewer is unavailable
-if [ "$no_img" = false ]; then
-    if [ "$img_viewer" = "chafa" ] && [ -z "$(command -v chafa)" ]; then
-        printf "${YLLW}WARNING${NRM}: chafa is not installed.\n"
-        img_viewer=""
-        no_img=true
-    elif [ "$img_viewer" = "catimg" ] && [ -z "$(command -v catimg)" ]; then
-        printf "${YLLW}WARNING${NRM}: catimg is not installed.\n"
-        img_viewer=""
-        no_img=true
-    elif [ "$img_viewer" = "ascii-image-converter" ] && [ -z "$(command -v ascii-image-converter)" ]; then
-        printf "${YLLW}WARNING${NRM}: ascii-image-converter is not installed.\n"
-        img_viewer=""
-        no_img=true
-    fi
+if [ "$no_img" = false ] && [ -z "$(command -v $img_viewer)" ]; then
+    printf "${YLLW}WARNING${NRM}: ${img_viewer} is not installed.\n"
+    img_viewer=""
+    no_img=true
 fi
 
 # Read movie and search
