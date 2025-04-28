@@ -115,7 +115,7 @@ if [ "$no_img" = false ]; then
     curl -s $img -o /tmp/img.jpg
 fi
 
-description=$(echo $content | grep -oP '(?<=<meta name="description" content=").*?(?=")' |
+description=$(echo $content | grep -oP '(?<="synopsis-value">).*?(?=</rt-text>)' |
 sed 's/&quot;/"/g' | sed "s/&#39;/'/g" | sed 's/&amp;/\&/g' | head -1)
 language=$(echo $content | grep -oP \
 '(?<=Language</rt-text> </dt> <dd data-qa="item-value-group"> <rt-text data-qa="item-value">).*?(?=</rt-text>)')
