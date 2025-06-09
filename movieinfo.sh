@@ -50,15 +50,15 @@ fi
 # Read movie and search
 printf "${BOLD}Search${NRM}: "
 read movie
-movie=$(echo $movie | sed -r 's/ /%20/g')
+movie=$(echo "$movie" | sed -r 's/ /%20/g')
 content=$(curl -s https://www.rottentomatoes.com/search?search=$movie)
-readarray movies -t <<<$(echo $content | grep -oP \
+readarray movies -t <<< $(echo $content | grep -oP \
 '(?<=<search-page-media-row).*?(?=</search-page-media-row>)')
-readarray titleList -t <<<$(echo ${movies[@]} | grep -oP \
+readarray titleList -t <<< $(echo ${movies[@]} | grep -oP \
 '(?<=slot="title"> ).*?(?= </a>)' | sed "s/&#39;/'/g" | sed 's/&amp;/\&/g')
-readarray yearList -t <<<$(echo ${movies[@]} | grep -oP \
+readarray yearList -t <<< $(echo ${movies[@]} | grep -oP \
 '(?<=releaseyear=").*?(?=")')
-readarray linkList -t <<<$(echo ${movies[@]} | grep -oP \
+readarray linkList -t <<< $(echo ${movies[@]} | grep -oP \
 '(?<= </a> <a href=").*?(?=" class="unset" data-qa="info-name" slot="title">)')
 
 # Movie choice dialog
@@ -110,9 +110,11 @@ done
 # Retrieve chosen movie info
 content=$(curl -s ${linkList[$choice]})
 
+tmp=$(mktemp -u XXXXXXXXXX)  # substring for temporary files
+img="/tmp/movieinfo_${tmp}_img"
 if [ "$no_img" = false ]; then
-    img=$(echo $content | grep -oP '(?<=<meta property="og:image" content=").*?(?=")' | head -1)
-    curl -s $img -o /tmp/img.jpg
+    img_link=$(echo $content | grep -oP '(?<=<meta property="og:image" content=").*?(?=")' | head -1)
+    curl -s "$img_link" -o "$img"
 fi
 
 description=$(echo $content | grep -oP '(?<="synopsis-value">).*?(?=</rt-text>)' |
@@ -129,67 +131,68 @@ popcornmeter=$(echo $content | grep -oP '(?<="scorePercent":").*?(?=%","title":"
 # Print chosen movie info
 printf "\n${BOLD}Visit${NRM}: ${linkList[choice]}\n"
 
-termwidth=$(tput cols) # terminal width
+termwidth=$(tput cols)  # terminal width
 termheight=$(tput lines)  # terminal height
 asciiwidth=$((27 * termwidth / 100))
 txtwidth=$((6 * termwidth / 10))
 
 if [ "$img_viewer" = "chafa" ]; then
-    chafa -s "$((termwidth))x$((termheight / 3))" /tmp/img.jpg
+    chafa -s "$((termwidth))x$((termheight / 3))" "$img"
     printf "\n"
 elif [ "$img_viewer" = "catimg" ]; then
-    catimg -r 2 -w $((2 * $asciiwidth)) /tmp/img.jpg &>>/tmp/img0
-    if [ "$(cat /tmp/img0 | grep error)" ]; then
+    catimg -r 2 -w $((2 * $asciiwidth)) "$img" &>> "${img}-0"
+    if [ "$(cat "${img}-0" | grep error)" ]; then
         # In case of catimg error no image
         no_img=true
     fi
-    sed -i '$d' /tmp/img0  # remove last line
+    sed -i '$d' "${img}-0"  # remove last line
     # In case title overflows to 2nd line
-    paste -d '' /tmp/img0 <(printf "\n${BOLD}") >/tmp/img
+    paste -d '' "${img}-0" <(printf "\n${BOLD}") > "${img}-final"
 elif [ "$img_viewer" = "ascii-image-converter" ]; then
-    script -q -c "ascii-image-converter $flags -C -W $asciiwidth /tmp/img.jpg" -O /dev/null >>/tmp/img0
-    if [ "$(cat /tmp/img0 | grep ascii-image-converter)" ]; then
+    script -q -c "ascii-image-converter $flags -C -W $asciiwidth $img" -O /dev/null >> "${img}-0"
+    if [ "$(cat "${img}-0" | grep ascii-image-converter)" ]; then
         # In case of ascii-image-converter error no image
         no_img=true
     fi
-    sed -i 's/\r//g' /tmp/img0  # dos to unix
+    sed -i 's/\r//g' "${img}-0"  # dos to unix
     # In case title overflows to 2nd line
-    paste -d '' /tmp/img0 <(printf "\n${BOLD}") >/tmp/img
+    paste -d '' "${img}-0" <(printf "\n${BOLD}") > "${img}-final"
 fi
 
 if [ "$no_img" = true ] && [ -n "$img_viewer" ]; then
     printf "${RED}ERROR${NRM}: could not process movie image.\n"
 fi
 
-printf "${BOLD}${titleList[$choice]} (${yearList[$choice]:=-})${NRM}" | tr -d '\n' >/tmp/mvinfo
-printf "\n${NRM}${description:=-}\n" >>/tmp/mvinfo
+info="/tmp/movieinfo_${tmp}_info"
+printf "${BOLD}${titleList[$choice]} (${yearList[$choice]:=-})${NRM}" | tr -d '\n' > "$info"
+printf "\n${NRM}${description:=-}\n" >> "$info"
 
-printf "\n${BOLD}Language${NRM}: ${language:=-}\n" >>/tmp/mvinfo
-printf "${BOLD}Director${NRM}: ${director:=-}\n" >>/tmp/mvinfo
-printf "${BOLD}Runtime${NRM}: ${runtime:=-}\n" >>/tmp/mvinfo
-printf "${BOLD}Genre${NRM}: ${genre:=-}\n\n" >>/tmp/mvinfo
+printf "\n${BOLD}Language${NRM}: ${language:=-}\n" >> "$info"
+printf "${BOLD}Director${NRM}: ${director:=-}\n" >> "$info"
+printf "${BOLD}Runtime${NRM}: ${runtime:=-}\n" >> "$info"
+printf "${BOLD}Genre${NRM}: ${genre:=-}\n\n" >> "$info"
 
 meter=$([ -n "$tomatometer" ] && echo "$tomatometer%%" || echo "-")
-printf "${RED}Tomatometer${NRM}: ${meter}\n" >>/tmp/mvinfo
+printf "${RED}Tomatometer${NRM}: ${meter}\n" >> "$info"
 meter=$([ -n "$popcornmeter" ] && echo "$popcornmeter%%" || echo "-")
-printf "${BOLD}Popcornmeter${NRM}: ${meter}\n" >>/tmp/mvinfo
+printf "${BOLD}Popcornmeter${NRM}: ${meter}\n" >> "$info"
 
-fold -s -w $txtwidth /tmp/mvinfo >/tmp/mvinfostd
+fold -s -w $txtwidth "$info" > "${info}-std"
 if [ "$img_viewer" = "chafa" ] || [ "$no_img" = true ]; then
-    cp /tmp/mvinfostd /tmp/output
+    cp "${info}-std" "${info}-final"
 else
-    sed -e 's/$/    /' -i /tmp/img
-    linesart=$(cat /tmp/img | wc -l)
-    linestxt=$(cat /tmp/mvinfostd | wc -l)
+    sed -e 's/$/    /' -i "${img}-final"
+    linesart=$(cat "${img}-final" | wc -l)
+    linestxt=$(cat "${info}-std" | wc -l)
     i=$((linestxt - linesart))
     while ((i > 0)); do
-        printf "%*s    \n" $asciiwidth ' ' >>/tmp/img
+        printf "%*s    \n" $asciiwidth ' ' >> "${img}-final"
         ((i--))
     done
-    paste -d '' /tmp/img /tmp/mvinfostd >/tmp/output
+    paste -d '' "${img}-final" "${info}-std" > "${info}-final"
 fi
-cat /tmp/output
+cat "${info}-final"
 
 # Clear temporary files
-rm -f /tmp/img.jpg /tmp/img /tmp/img0
-rm /tmp/mvinfo /tmp/mvinfostd /tmp/output
+rm -f "$img" "${img}-0" "${img}-final"
+rm "$info" "${info}-std" "${info}-final"
