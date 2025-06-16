@@ -8,11 +8,12 @@
 **None**: for no image mode [--no-image]
 
 # Installation
-To install systemwide, run:
+To install for the current user, run:
 
 ```bash
-sudo curl https://raw.githubusercontent.com/gmou3/movieinfo/main/movieinfo.sh -o /usr/bin/movieinfo
-sudo chmod a+rx /usr/bin/movieinfo
+mkdir -p "$HOME/.local/bin"
+curl https://raw.githubusercontent.com/gmou3/movieinfo/main/movieinfo.sh -o "$HOME/.local/bin/movieinfo"
+chmod +x "$HOME/.local/bin/movieinfo"
 ```
 
 (Alternatively, you can simply download and run the script `movieinfo.sh`.)
