@@ -57,7 +57,7 @@ readarray movies -t <<< $(echo $content | grep -oP \
 readarray titleList -t <<< $(echo ${movies[@]} | grep -oP \
 '(?<=slot="title"> ).*?(?= </a>)' | sed "s/&#39;/'/g" | sed 's/&amp;/\&/g')
 readarray yearList -t <<< $(echo ${movies[@]} | grep -oP \
-'(?<=releaseyear=").*?(?=")')
+'(?<=release-year=").*?(?=")')
 readarray linkList -t <<< $(echo ${movies[@]} | grep -oP \
 '(?<= </a> <a href=").*?(?=" class="unset" data-qa="info-name" slot="title">)')
 
