@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 img_viewer=chafa  # default
 
